@@ -9,4 +9,6 @@ func main() {
 		AppName: `xiaoya`,
 		AppPath: `/Users/kozo4/cat`,
 	})
+	// Xiaoya.SetBinFile()
+	// Xiaoya.SetIcon()
 }

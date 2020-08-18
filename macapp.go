@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 )
@@ -57,47 +58,42 @@ func (res AppRes) CreateFolder() bool {
 }
 
 // CreateInitInfoPlist create default `info.plist` file data
+// man link: https://www.jianshu.com/p/e8c686a00027
 func CreateInitInfoPlist(name string) string {
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDisplayName</key>
+  <string>%v</string>
 	<key>CFBundleIconFile</key>
 	<string>%v</string>
 </dict>
-</plist>`, name)
+</plist>`, name, name)
 }
 
 // SetBinFile set `bin` file, just like golang run `func main(){}`
 // copy `input` bin file to `name.app/Contents/MacOS/name`
 func (res AppRes) SetBinFile(input string) (int64, error) {
-	var Fpath = res.GetPath()
-	var Fname = res.GetName()
-	var dist = path.Join(Fpath, fmt.Sprintf("./Contents/MacOS/%v", Fname))
+	var dist = res.GetBinPath()
 	return copy(input, dist)
 }
 
 // SetIconByIcns set icon by `icns` format
 func (res AppRes) SetIconByIcns(input string) (int64, error) {
-	var Fpath = res.GetPath()
-	var Fname = res.GetName()
-	var r = path.Join(Fpath, fmt.Sprintf("./Contents/Resources/%v.icns", Fname))
+	var r = res.GetIconPath()
 	return copy(input, r)
 }
 
-// SetIconByPng set icon by `png` format
-func (res AppRes) SetIconByPng(input string) {
-	// TODO
-}
-
-// SetIconByJpg set icon by `jpg` format
-func (res AppRes) SetIconByJpg(input string) {
-	// TODO
-}
-
-// SetIcon set icon, support `png`/`jpg` fotmat
-func (res AppRes) SetIcon(input string) {
-	// TODO
+// SetIcon set icon, support `png`/`jpg`/`gif`/`..` fotmat
+// if icon format is `.icns`, please use [SetIconByIcns] method
+// use imagemagick format to `.incs`, before install this
+// website: https://imagemagick.org
+// github: https://github.com/ImageMagick
+func (res AppRes) SetIcon(input string) ([]byte, error) {
+	var r = res.GetPath()
+	cache := exec.Command(`magick`, input, r)
+	return cache.CombinedOutput()
 }
 
 // CreateAppContentFolder create `name.app` content folder
@@ -137,17 +133,28 @@ func (res AppRes) GetName() string {
 	return res.Conf.AppName
 }
 
+// GetIconPath get icon path
+func (res AppRes) GetIconPath() string {
+	var Fpath = res.GetPath()
+	var Fname = res.GetName()
+	var r = path.Join(Fpath, fmt.Sprintf("./Contents/Resources/%v.icns", Fname))
+	return r
+}
+
+// GetBinPath get bin file path
+func (res AppRes) GetBinPath() string {
+	var Fpath = res.GetPath()
+	var Fname = res.GetName()
+	var dist = path.Join(Fpath, fmt.Sprintf("./Contents/MacOS/%v", Fname))
+	return dist
+}
+
 // Create crate app
 func Create(conf AppConfig) AppRes {
 	res := New(conf)
 	res.CreateFolder()
 	res.CreateAppContentFolder()
 	return res
-}
-
-// CreateGolangApp create golang app
-func CreateGolangApp() {
-	// TODO
 }
 
 func curr() string {
