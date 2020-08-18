@@ -91,7 +91,7 @@ func (res AppRes) SetIconByIcns(input string) (int64, error) {
 // website: https://imagemagick.org
 // github: https://github.com/ImageMagick
 func (res AppRes) SetIcon(input string) ([]byte, error) {
-	var r = res.GetPath()
+	var r = res.GetIconPath()
 	cache := exec.Command(`magick`, input, r)
 	return cache.CombinedOutput()
 }
